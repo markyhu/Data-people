@@ -5,3 +5,4 @@ Run the dashboard locally:
 ```
 streamlit run app.py
 ```
+or check out the dashboard [here](https://share.streamlit.io/markyhu/kaggle_survey/app.py)
