@@ -1,14 +1,9 @@
-
-from turtle import width
 import streamlit as st
 import numpy as np
 import pandas as pd
-import seaborn as sns
-import matplotlib.pyplot as plt
 import plotly.express as px
-import plotly.graph_objects as go
 
-st.set_page_config(page_title='Dive into data scicence jobs',layout='wide')
+
 
 path = './data/kaggle_survey_2021_responses.csv'
 
@@ -16,16 +11,10 @@ path = './data/kaggle_survey_2021_responses.csv'
 def load_data():
     data = pd.read_csv(path,low_memory=False)
     return data
-    
-def get_percent(df,col):
-    '''
-    return percent value given dataframe and column name
-    '''
-    counts = df[col].value_counts(dropna= False)
-    percent = round(counts*100/df[col].count(),2)
-    return percent
 
 def profile_plot(df,profile_metric,position):
+
+
     if profile_metric != 'Country':
 
         grouped_df=df.groupby(['Position',profile_metric]).size().unstack().fillna(0)
@@ -57,19 +46,25 @@ def profile_plot(df,profile_metric,position):
 
 
 def profile_desc(df,profile_metric,position):
+    '''
+    Return some descriptions of the plot given a profile metric and the position title
+    '''
     
     data = df[df['Position'] == position][profile_metric].value_counts()
     if profile_metric =='Age':
-        st.markdown(f'Most {position} aged {data.idxmax()}.' )
+        st.markdown(f'Most {position} aged **{data.idxmax()}**.' )
     if profile_metric =='Country':
-        st.markdown(f'Most {position} are from {data.idxmax()}.' )
+        st.markdown(f'Most {position} are from **{data.idxmax()}**.' )
     if profile_metric =='Education':
-        st.markdown(f'Most {position} have an education of or plan to attain an education of {data.idxmax()}.')
+        st.markdown(f'Most {position} have an education of or plan to attain an education of **{data.idxmax()}**.')
     if profile_metric =='Programming experience':
-        st.markdown(f'Most {position} have programming experience of {data.idxmax()}.')
+        st.markdown(f'Most {position} have programming experience of **{data.idxmax()}**.')
 
 
-def job_bar_plot(df,position,industry,all_industry):
+def job_bar_plot(df,position,industry):
+    '''
+    Display bar plot to show the job responsibilities of given position title and industry 
+    '''
     data = df.loc[position].sort_values()
     df = pd.DataFrame({'Job description':data.index,'Percentage':data.values*100})
     fig =px.bar(df,x='Percentage',y= 'Job description',
@@ -77,22 +72,10 @@ def job_bar_plot(df,position,industry,all_industry):
                 orientation='h',color = 'Percentage',width=650,height=450)
     fig.update_layout(plot_bgcolor='rgba(0,0,0,0)')
     #fig.update_yaxes(tickfont_family="Arial Black")
-    if all_industry == True:
-        fig.update_layout(title = dict(text=f'Job tasks of {position}',x=.5))
-    else:
-        fig.update_layout(title = dict(text=f'Job tasks of {position} in {industry}',x=.5))
-
-    # fig = go.Figure(data=[go.Bar(x=data.values*100,y= data.index,
-    #                         text =['{:.0%}'.format(val) for val in data.values],
-    #                         orientation=orientation)],layout=go.Layout(plot_bgcolor='rgba(0,0,0,0)',color = data.values*100))
+    fig.update_layout(title = dict(text=f'Job responsibilities of {position} in {industry}',x=.5))
 
     st.plotly_chart(fig)
 
-
-def get_percent_df(df,var1,var2):
-    group_df=df.groupby([var1,var2]).size().unstack().fillna(0)
-    #group_df=group_df.apply(lambda x: x/x.sum(), axis=1)
-    return group_df
 
 
 def main():
@@ -109,13 +92,16 @@ def main():
     response['Duration'] = response['Duration'].astype(int)
     response = response[response['Duration'] <=1931]
     response.replace('Some college/university study without earning a bachelor’s degree',
-                    'Some college study',inplace=True)
+                    'Some college study',inplace=True) #Rename to make it's clearer to display
     N_response=response.shape[0]
     N_questions = len(questions)-1
     N_countries = len(response['Country'].unique())
     
-
-
+    st.title('Data People Explorer')
+    st.markdown('Ever wondered about what the job titles are in data science and what the people working with data are like? \
+                This dashboard takes answers from data people all over the world using the anual survey of Kaggle,\
+                one of the largest data science community, and allows you to discover everything you are curious about data people.')
+    st.markdown('___')
     st.header('Survey overview:')
     st.markdown(':clock1: Time window of the survey: 09/01/2021 - 10/04/2021')
     col1,col2,col3 = st.columns(3)
@@ -127,8 +113,10 @@ def main():
         st.markdown(':earth_americas: ' + str(N_countries) + ' countries/territories')
     with st.expander('Click here to view the raw data 👉'):
         st.dataframe(response)
-
     st.markdown('___')
+
+    st.markdown('**Select a job position you are interested to begin**')
+    position = st.selectbox("I'm interested to know",job_title)
     metrics = ['Age','Country','Education','Programming experience']
     Q24_question = [question for question in response.columns if 'Q24' in question]
     Q24_question.remove('Q24_Part_7') #remove none option
@@ -141,27 +129,22 @@ def main():
                     "Research to advance ML",
                     "Other"]
     job_activ.columns = job_desc
-    #Create selection box
+  
 
     job_title=['Business Analyst','Data Scientist', 'Data Analyst', 'Machine Learning Engineer',
             'DBA/Database Engineer','Data Engineer','Statistician',
             'Software Engineer','Research Scientist']
 
 
-    st.sidebar.markdown('')
-    st.sidebar.markdown('')
-    st.sidebar.markdown('')
-    st.sidebar.markdown('**Select a job position you are interested to begin**')
-    position = st.sidebar.selectbox("Choose a job title",job_title)
-
     st.header('Data people profile')
     
     spacer1,col1, col2,spacer2 = st.columns([.2,2.5,4.4,.2])
     with col1:
-        st.markdown(f'What do you want to know about {position}? Their age, educational levle, country of residence or programming experience?')
+        st.markdown(f'What do you want to know about {position}? Their age, educational level, country of residence or programming experience? Select below to find out!')
         
-        profile_metric = st.selectbox('Select below to find out!',metrics)
+        profile_metric = st.selectbox('Select a profile metric',metrics)
         
+        st.text('')
         profile_desc(response,profile_metric,position)
     
     with col2:
@@ -169,50 +152,29 @@ def main():
 
 
     
-
-
     st.header('What do data people do?')
 
     industries = [i for i in response.Industry.unique() if str(i) != 'nan' and str(i) != 'Other']
+    industries.append('View in all industries')
     spacer1, col1, spacer2, col2, spacer3  = st.columns((.2, 2.5,.4,  4.4, .2))
     with col1:
         st.markdown(f'What do {position} do in their daily job? Select below to see their job responsibility in all industries or a certain industry.')
-        all_industry = st.checkbox(f'View in all industries')
-        industry = st.selectbox('Or pick an industry 👇', industries)
+        
+        industry = st.selectbox(industries)
     with col2:
 
-        if all_industry:
+        if industry == 'View in all industries':
         
-            job_bar_plot(job_activ,position,industry,all_industry = all_industry)
+            job_bar_plot(job_activ,position,industry)
         
     
         else:
             job_activ_indus=response[response['Industry']==industry]\
                 .groupby('Position')[Q24_question].agg(lambda x : x.notnull().mean())
             job_activ_indus.columns = job_desc
-            job_bar_plot(job_activ_indus,position,industry,all_industry= all_industry)
+            job_bar_plot(job_activ_indus,position,industry)
 
         
 
-
-
-
-
-
-
-#color = sns.color_palette('bright')
-
-#2 columns to display percent metric and rank
-
-# col1, col2 = st.columns(2)
-# metric_display = str(position_perc[position[0]])+'%'
-# rank_display = list(position_perc.index).index(position[0]) + 1
-# if position:
-
-#     col1.metric(position[0],metric_display)
-#     col2.metric('Rank',rank_display)
-
-# if option:
-#     px.scatter(po_ed_df)
 if __name__ == '__main__':
     main()
