@@ -4,7 +4,6 @@ import pandas as pd
 import plotly.express as px
 
 
-
 path = './data/kaggle_survey_2021_responses.csv'
 
 @st.cache
@@ -75,7 +74,6 @@ def job_bar_plot(df,position,industry):
     fig.update_layout(title = dict(text=f'Job responsibilities of {position} in {industry}',x=.5))
 
     st.plotly_chart(fig)
-
 
 
 def main():
@@ -161,6 +159,8 @@ def main():
         st.markdown(f'What do {position} do in their daily job? Select below to see their job responsibility in all industries or a certain industry.')
         
         industry = st.selectbox(industries)
+
+
     with col2:
 
         if industry == 'View in all industries':
