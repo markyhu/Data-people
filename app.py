@@ -165,6 +165,11 @@ def main():
         lambda x: x.notnull().mean()
     )
     job_activ.columns = job_desc
+    
+    industries = [
+        i for i in response.Industry.unique() if str(i) != "nan" and str(i) != "Other"
+    ]
+    industries.insert(0,"All industries")
 
     st.title("Data People Explorer")
     st.markdown(
@@ -207,10 +212,7 @@ def main():
 
     st.header("What do data people do?")
 
-    industries = [
-        i for i in response.Industry.unique() if str(i) != "nan" and str(i) != "Other"
-    ]
-    industries.insert(0,"All industries")
+ 
     spacer1, col1, spacer2, col2, spacer3 = st.columns((0.2, 2.5, 0.4, 4.4, 0.2))
     with col1:
         st.markdown(
